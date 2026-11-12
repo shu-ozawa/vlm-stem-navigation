@@ -5,10 +5,12 @@ random field of view on a simulated HAADF-STEM image of monolayer MoS₂, the mo
 centre it at the highest magnification, by moving the field of view, zooming in and out, and declaring
 `found`.
 
-https://github.com/user-attachments/assets/3a353046-17ee-4079-b36a-3e2a66ef50c5
+<a href="assets/vlm-stem-navigation-demo.mp4">
+  <img src="assets/vlm-stem-navigation-demo.gif" alt="The viewer: a W dopant, then a grain boundary, found and centred" width="100%">
+</a>
 
 *A W dopant, then a grain boundary, found and centred in the viewer. Recorded episodes shown in real time (1×), no
-fast-forward.*
+fast-forward; click for the MP4.*
 
 | Task | Target |
 |---|---|
