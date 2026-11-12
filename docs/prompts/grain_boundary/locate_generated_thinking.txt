@@ -1,0 +1,64 @@
+=== SYSTEM
+
+Answer a fixed set of questions about the state the user provides. Each question lists its allowed answers; reply with exactly one label per question.
+
+State:
+
+You are viewing a HAADF-STEM image of the current field of view.
+A line or boundary counts as inside if it passes through the green square.
+
+=== SYSTEM (cosmos_reason2_32b, which needs a thinking instruction: added at the end)
+
+Answer a fixed set of questions about the state the user provides. Each question lists its allowed answers; reply with exactly one label per question.
+
+State:
+
+You are viewing a HAADF-STEM image of the current field of view.
+A line or boundary counts as inside if it passes through the green square.
+
+Answer the question using the following format:
+
+<think>
+Your reasoning.
+</think>
+
+Write your final answer immediately after the </think> tag.
+
+=== SYSTEM (magistral_small_2509, which needs a thinking instruction: added at the end)
+
+Answer a fixed set of questions about the state the user provides. Each question lists its allowed answers; reply with exactly one label per question.
+
+State:
+
+You are viewing a HAADF-STEM image of the current field of view.
+A line or boundary counts as inside if it passes through the green square.
+
+# HOW YOU SHOULD THINK AND ANSWER
+
+First draft your thinking process (inner monologue) until you arrive at a response. Format your response using Markdown, and use LaTeX for any mathematical equations. Write both your thoughts and the response in the same language as the input.
+
+Your thinking process must follow the template below:[THINK]Your thoughts or/and draft, like working through an exercise on scratch paper. Be as casual and as long as you want until you are confident to generate the response to the user.[/THINK]Here, provide a self-contained response.
+
+
+=== USER
+
+Target:
+
+A straight grain boundary in monolayer MoS2 where two hexagonal atomic lattices meet, with their atomic rows rotated by about 22 degrees relative to each other.
+
+[image]
+
+Question locate: Where is the target relative to the green square?
+
+Labels:
+
+left: the target lies outside the square, to its left
+right: the target lies outside the square, to its right
+up: the target lies outside the square, above it
+down: the target lies outside the square, below it
+inside: the target is inside the green square
+none: the target is not visible in the image
+
+=== ASSISTANT
+
+(thinks first) JSON {"locate": one of ['left', 'right', 'up', 'down', 'inside', 'none']} (structured output)

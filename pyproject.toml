@@ -1,0 +1,46 @@
+[project]
+name = "stem-vlm-navigation"
+version = "0.1.0"
+description = "Vision-language models navigating simulated HAADF-STEM images: find a W dopant or a grain boundary and centre it at the highest magnification."
+readme = "README.md"
+license = "MIT AND Apache-2.0"   # MIT; the files adapted from openjev are Apache-2.0 (README, License)
+license-files = ["LICENSE", "src/serving/decision_server/LICENSE"]
+requires-python = "==3.12.*"
+dependencies = [
+    # vLLM: a pinned nightly build (commit e9757321, CUDA 13.0).
+    "vllm @ https://wheels.vllm.ai/e9757321527ca1ecd514c07c1418dd2c53da3d19/vllm-0.29.1rc1.dev573%2Bge97573215-cp38-abi3-manylinux_2_28_x86_64.whl",
+    "torch==2.13.0",          # required by that vLLM wheel (PyPI build = CUDA 13.0)
+    "transformers==5.17.0",
+    "numpy==2.3.5",
+    "abtem==1.0.10",          # HAADF-STEM multislice simulation (GPL-3.0; used as a library only)
+    "ase>=3.29",
+    "huggingface-hub>=1.31.0",
+    "requests",
+    "httpx",                  # the decision server calls vLLM (src/serving/decision_server)
+    "pillow",
+    "pyyaml",
+    "fastapi",
+    "uvicorn",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/simulator", "src/agent", "src/serving", "src/viewer"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv]
+# Linux x86_64 with an NVIDIA GPU (tested: RTX PRO 5000 Blackwell, sm_120, driver 595.84).
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
+sim = [
+    "cupy-cuda13x==14.2.0",
+]

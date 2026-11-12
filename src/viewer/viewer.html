@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!-- The viewer page: the structure only. Style: viewer.css; behaviour: viewer.js; API: app.py. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>stem-vlm-navigation</title>
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- title -->
+  <div class="topbar">
+    <div class="title-block">
+      <h1 class="title">Sequential Decision-Making <span class="title-for">for</span> STEM</h1>
+      <span class="subtitle">Vision-language models steering a scanning transmission electron microscope</span>
+    </div>
+  </div>
+
+  <!-- settings: how the model is asked (Method) and what it has to do (Problem) -->
+  <div class="config">
+    <div class="controls cfg-group">
+      <span class="cfg-name">Method</span>
+      <label>Model <span class="model-name mono" id="c-model">-</span></label>
+      <label>Reader
+        <select id="c-reader">
+          <option value="typed" selected>typed</option>
+          <option value="generated">generated</option>
+          <option value="generated_thinking">generated_thinking</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="controls cfg-group">
+      <span class="cfg-name">Problem</span>
+      <label>Task <select id="c-task"></select></label>
+      <label>Start
+        <select id="c-mode">
+          <option value="visible">visible (centring)</option>
+          <option value="hidden" selected>hidden (search)</option>
+        </select>
+      </label>
+      <label>Seed <input type="number" id="c-seed" value="42"></label>
+      <label>Dose
+        <select id="c-dose">
+          <option value="">noiseless</option>
+          <option value="200000">2e5 e⁻/Å²</option>
+          <option value="50000" selected>5e4 e⁻/Å²</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- run buttons and status -->
+  <div class="run">
+    <div class="top-actions">
+      <button class="primary btn-go" id="btn-start">
+        <svg class="i-play" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/></svg>
+        <svg class="i-pause" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="1.5" width="2.5" height="9" rx=".6" fill="currentColor"/><rect x="7" y="1.5" width="2.5" height="9" rx=".6" fill="currentColor"/></svg>
+        <span id="btn-start-label">Start</span>
+      </button>
+      <button class="btn-ghost" id="btn-step">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5v9l6-4.5z" fill="currentColor"/><rect x="8.5" y="1.5" width="1.8" height="9" rx=".5" fill="currentColor"/></svg>
+        Step
+      </button>
+      <button class="btn-ghost" id="btn-reset">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.2 6a3.8 3.8 0 1 0 1.2-2.8M2 1.5v2.8h2.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Reset
+      </button>
+    </div>
+
+    <div class="metrics mono statusbar">
+      <div class="status mono"><span class="dot" id="dot"></span><span id="status-text">Idle</span></div>
+      <span class="sb-item"><span class="metric-label">Step</span> <span class="metric-val" id="m-step">0</span></span>
+      <span class="sb-item metric-val" id="m-zoom" title="field of view, as the model is told">-</span>
+      <span class="sb-item metric-val" id="m-ms" title="time of the model calls of the last step">-</span>
+    </div>
+  </div>
+
+  <!-- three panels -->
+  <div class="grid">
+    <div class="panel">
+      <h3>Map of the whole specimen</h3>
+      <canvas id="overview"></canvas>
+      <label class="panel-opt"><input type="checkbox" id="c-truth" checked> show target</label>
+      <details class="hint">
+        <summary>About this map</summary>
+        Not shown to the model. Blue box = current field of view, green dashed = green square,
+        yellow line = path, ● = start; with "show target", the target (red).
+      </details>
+    </div>
+
+    <div class="panel">
+      <h3>What the model sees</h3>
+      <div class="obs-wrap"><img id="obs" alt=""><div class="center-box" id="center-box"></div></div>
+      <details class="hint">
+        <summary>About this image</summary>
+        Exactly the image the model gets ("How the model decides" shows every image of each step).
+        Green dashed = the green square drawn on the image for the direction question (±10% of the field
+        of view). It is also the success region: "found" at the highest magnification succeeds with the
+        target inside it, and "inside" is the correct answer when the target is in it.
+      </details>
+    </div>
+
+    <div class="panel" id="trace-panel">
+      <div class="trace-head"><h3>How the model decides</h3></div>
+      <label class="panel-opt"><input type="checkbox" id="c-gt"> show correct answers</label>
+      <div id="trace"><div class="muted">Run a step to see every question the model was asked, the image it saw, and the branch taken.</div></div>
+      <details class="steps">
+        <summary>All steps (click one to see how it was decided)</summary>
+        <div class="log mono" id="log"></div>
+      </details>
+    </div>
+  </div>
+
+</div>
+<script src="viewer.js"></script>
+</body>
+</html>

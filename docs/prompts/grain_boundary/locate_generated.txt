@@ -1,0 +1,31 @@
+=== SYSTEM
+
+Answer a fixed set of questions about the state the user provides. Each question lists its allowed answers; reply with exactly one label per question.
+
+State:
+
+You are viewing a HAADF-STEM image of the current field of view.
+A line or boundary counts as inside if it passes through the green square.
+
+=== USER
+
+Target:
+
+A straight grain boundary in monolayer MoS2 where two hexagonal atomic lattices meet, with their atomic rows rotated by about 22 degrees relative to each other.
+
+[image]
+
+Question locate: Where is the target relative to the green square?
+
+Labels:
+
+left: the target lies outside the square, to its left
+right: the target lies outside the square, to its right
+up: the target lies outside the square, above it
+down: the target lies outside the square, below it
+inside: the target is inside the green square
+none: the target is not visible in the image
+
+=== ASSISTANT
+
+JSON {"locate": one of ['left', 'right', 'up', 'down', 'inside', 'none']} (structured output)

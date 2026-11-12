@@ -1,0 +1,35 @@
+# The comparison of the readers (typed, generated, generated_thinking) on the rewritten code: the seeds and probe views
+# of answer_types_v1, noiseless, the target described as in the reference. One run per model, on an RTX PRO 6000:
+#   for m in gemma4 qwen38_27b muse_glimmer_30b cosmos_reason2_32b magistral_small_2509 nemotron_omni_30b \
+#            cosmos_reason2_8b cosmos_reason2_2b gemma4_26b_bf16 gemma4_e2b gemma4_e4b \
+#            qwen35_2b qwen35_4b qwen35_9b qwen35_27b cosmos3_super cosmos3_nano; do
+#     uv run python experiments/answer_types/run.py --config experiments/answer_types/configs/answer_types_v2.yaml --model $m
+#   done
+run: answer_types_v2
+
+readers: [typed, generated, generated_thinking]
+description: reference
+models: [gemma4, qwen38_27b, muse_glimmer_30b,
+        cosmos_reason2_32b, magistral_small_2509,
+        nemotron_omni_30b,
+        cosmos_reason2_8b, cosmos_reason2_2b,
+        gemma4_26b_bf16, gemma4_e2b, gemma4_e4b,
+        qwen35_2b, qwen35_4b, qwen35_9b, qwen35_27b,
+        cosmos3_super, cosmos3_nano]
+# the size series: cosmos_reason2 2B, 8B, 32B; gemma4 E2B, E4B, 26B-A4B in BF16 (and gemma4, the 26B-A4B in NVFP4);
+# qwen35 2B, 4B, 9B, 27B; cosmos3 Nano, Super
+
+episodes:
+  tasks: [dopant_zoom, grain_boundary]
+  start_modes: [visible, hidden]
+  seeds: {start: 2000, count: 50}
+  max_steps: 60
+  dose: null
+
+probes:
+  tasks: [grain_boundary, dopant_zoom]
+  seeds: {start: 2000, count: 50}   # 1050 views per task
+  offsets_A: [0, 4, 8, 12, 16, 24, 32]
+  zoom_indices: [0, 1, 2]
+
+server: {require_idle_gpu: true, startup_timeout_s: 1500, shutdown_timeout_s: 180}

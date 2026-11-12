@@ -1,0 +1,595 @@
+/* The viewer page's style (viewer.html). */
+
+/* ------------------------------------------------------------ base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background: #fff;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+body {
+  padding: 16px;
+}
+
+.wrap {
+  width: 1228px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.err-text {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+details {
+  margin-top: 14px;
+}
+
+summary {
+  cursor: pointer;
+  color: #475569;
+}
+
+pre {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 11px;
+  white-space: pre-wrap;
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* ------------------------------------------------------------ title */
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.title-block {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.title-for {
+  font-weight: 400;
+  color: #64748b;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ settings (Method, Problem) */
+.config {  /* Method and Problem on rows of their own: one row runs past the page */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  align-items: center;
+  color: #334155;
+  font-size: 12px;
+}
+
+.controls label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.cfg-name {
+  min-width: 64px;  /* the same for both rows, so that their settings start at the same place */
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.model-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* selects and number inputs: an underline only */
+.controls select,
+.controls input[type=number] {
+  font: inherit;
+  color: #0f172a;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1.5px solid #cbd5e1;
+  border-radius: 0;
+  padding: 4px 2px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.controls input[type=number] {
+  width: 64px;
+}
+
+.controls select {
+  appearance: none;
+  -webkit-appearance: none;
+  field-sizing: content;
+  padding-right: 20px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+
+.controls select:hover,
+.controls input[type=number]:hover {
+  border-bottom-color: #94a3b8;
+}
+
+.controls select:focus-visible,
+.controls input[type=number]:focus-visible {
+  border-bottom-color: #0969da;
+}
+
+.controls input[type=checkbox] {
+  accent-color: #0969da;
+}
+
+/* ------------------------------------------------------------ run buttons */
+.run {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button.primary {
+  background: #0969da;
+  color: #fff;
+  border-color: #0969da;
+}
+
+.btn-go {
+  font-size: 15px;
+  padding: 10px 28px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(9, 105, 218, .3);
+}
+
+.btn-go:hover {
+  background: #0860c7;
+}
+
+/* Start shows a play icon, Pause a pause icon */
+.btn-go .i-pause,
+.btn-go.is-running .i-play {
+  display: none;
+}
+
+.btn-go.is-running .i-pause {
+  display: inline;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: #475569;
+  padding: 7px 10px;
+}
+
+.btn-ghost:hover {
+  background: #f1f5f9;
+}
+
+/* ------------------------------------------------------------ status bar */
+.statusbar {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.statusbar .sb-item {
+  padding: 4px 16px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.metric-label {
+  color: #64748b;
+}
+
+.metric-val {
+  font-weight: 700;
+}
+
+#m-step {
+  display: inline-block;
+  min-width: 7ch;
+}
+
+#m-zoom {
+  min-width: 19ch;
+  text-align: center;
+}
+
+#m-ms {
+  min-width: 14ch;
+  text-align: center;
+}
+
+/* the status pill; its colour follows the dot (live / ok / err) */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 360px;
+  padding: 4px 12px;
+  margin-right: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.status #status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status:has(.dot.live),
+.status:has(.dot.ok) {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status:has(.dot.err) {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+
+.dot.live,
+.dot.ok {
+  background: #16a34a;
+}
+
+.dot.err {
+  background: #dc2626;
+}
+
+.dot.live {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: .3; }
+}
+
+/* ------------------------------------------------------------ three panels */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 400px);
+  justify-content: center;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.panel > details.hint {
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.panel-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.panel-opt input {
+  accent-color: #0969da;
+  margin: 0;
+}
+
+.hint {
+  color: #64748b;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+/* map of the whole specimen */
+canvas#overview {
+  width: 374px;
+  display: block;
+  border-radius: 4px;
+  background: #000;
+}
+
+/* what the model sees, with the green square on top */
+.obs-wrap {
+  position: relative;
+  width: 374px;
+  height: 374px;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.obs-wrap img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.center-box {
+  position: absolute;
+  border: 1.5px dashed rgba(34, 197, 94, .9);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ how the model decides */
+.trace-head {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.trace-head h3 {
+  margin: 0;
+}
+
+.trace-head + .panel-opt {
+  margin: 0 0 8px;
+}
+
+/* one card per question */
+.stage {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.stage.wrong {
+  border-color: #fca5a5;
+  background: #fff7f7;
+}
+
+.stage-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.qnum {
+  font-weight: 700;
+  color: #0969da;
+}
+
+.lat {  /* time of this question's model call, right end of its header */
+  font-size: 11px;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.badge.ok { background: #dcfce7; color: #166534; }
+.badge.ng { background: #fee2e2; color: #991b1b; }
+.badge.na { background: #f1f5f9; color: #64748b; }
+
+.stage-body {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  align-items: flex-start;
+}
+
+.thumb img {
+  width: 104px;
+  height: 104px;
+  display: block;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+/* the probability of each answer */
+.bars {
+  flex: 1;
+  min-width: 0;
+}
+
+.lrow {
+  display: grid;
+  grid-template-columns: 58px 1fr 46px;
+  gap: 6px;
+  align-items: center;
+  margin: 2px 0;
+  font-size: 12px;
+}
+
+.lrow.chosen .lab {
+  color: #0969da;
+  font-weight: 700;
+}
+
+.lrow.truth {  /* the correct answer (with "show correct answers") */
+  background: #dcfce7;
+  border-radius: 4px;
+}
+
+.bar {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #94a3b8;
+  transition: width .15s;
+}
+
+.bar-fill.chosen {
+  background: #0969da;
+}
+
+.pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the prompt and the reasoning of a question, folded */
+.stage details {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.stage details pre {
+  margin-top: 4px;
+}
+
+/* between the cards: an arrow; after them: the weighted direction */
+.arrow {
+  text-align: center;
+  color: #94a3b8;
+  line-height: 1;
+  margin: 2px 0;
+}
+
+.axisbox {
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* all steps */
+details.steps {
+  margin-top: 12px;
+}
+
+details.steps summary {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.log {
+  max-height: 150px;
+  overflow: auto;
+  font-size: 11px;
+}
+
+.log div {
+  cursor: pointer;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.log div:hover {
+  background: #f1f5f9;
+}
+
+.log div.sel {
+  background: #dbeafe;
+}

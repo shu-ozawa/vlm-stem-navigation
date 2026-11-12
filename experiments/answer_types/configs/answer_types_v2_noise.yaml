@@ -1,0 +1,28 @@
+# The typed and generated reads under shot noise: answer_types_v2.yaml's episodes, the images with Poisson noise at each dose
+# (e-/A^2; noiseless: answer_types_v2). Episodes only. One run per model, on an RTX PRO 6000:
+#   for m in gemma4 qwen38_27b muse_glimmer_30b cosmos_reason2_32b magistral_small_2509 nemotron_omni_30b \
+#            cosmos_reason2_8b cosmos_reason2_2b gemma4_26b_bf16 gemma4_e2b gemma4_e4b \
+#            qwen35_2b qwen35_4b qwen35_9b qwen35_27b cosmos3_super cosmos3_nano; do
+#     uv run python experiments/answer_types/run.py --config experiments/answer_types/configs/answer_types_v2_noise.yaml --model $m
+#   done
+# Results: results/answer_types_v2_noise/episodes/<reader>/<model>/dose=<dose>/<task>_<start_mode>/
+run: answer_types_v2_noise
+
+readers: [typed, generated]
+description: reference
+models: [gemma4, qwen38_27b, muse_glimmer_30b,
+        cosmos_reason2_32b, magistral_small_2509,
+        nemotron_omni_30b,
+        cosmos_reason2_8b, cosmos_reason2_2b,
+        gemma4_26b_bf16, gemma4_e2b, gemma4_e4b,
+        qwen35_2b, qwen35_4b, qwen35_9b, qwen35_27b,
+        cosmos3_super, cosmos3_nano]
+
+episodes:
+  tasks: [dopant_zoom, grain_boundary]
+  start_modes: [visible, hidden]
+  seeds: {start: 2000, count: 50}
+  max_steps: 60
+  doses: [200000, 50000]
+
+server: {require_idle_gpu: true, startup_timeout_s: 1500, shutdown_timeout_s: 180}

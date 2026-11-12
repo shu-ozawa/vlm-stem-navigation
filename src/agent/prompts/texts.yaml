@@ -1,0 +1,52 @@
+# Every text of a request, in one place, except its frame: the opening line, "State:", "Labels:" and "Target:" are
+# the layout's (layout.py, the same for every reader). prompts/build.py puts these together;
+# run records hold the commit. Templates: {name} is filled in by build.py; a leading space belongs to the
+# text ("  …" keeps it).
+
+# the state of every question (the system turn, after "State:")
+conventions: |-
+  You are viewing a HAADF-STEM image of the current field of view.
+  A line or boundary counts as inside if it passes through the green square.
+
+# the target descriptions, per task (simulator/tasks.py), after "Target:". `reference` is the one every
+# run uses unless its config names another (answer_types_v2_descriptions.yaml compares them); no_description: no
+# "Target:" at all
+targets:
+  dopant_zoom:
+    reference: >-
+      A single heavy dopant atom (W substituting Mo in monolayer MoS2) that appears much brighter than all the other
+      atomic columns.
+    paraphrased: >-
+      One tungsten atom that has replaced a molybdenum atom in single-layer MoS2; its atomic column is far brighter
+      than every other column in the image.
+    name_only: >-
+      A W dopant in monolayer MoS2.
+    visual_only: >-
+      A single atomic column in monolayer MoS2 that is much brighter than all the others.
+    technical_only: >-
+      A substitutional W dopant on a Mo site (W_Mo) in monolayer MoS2.
+    no_description: ""
+  grain_boundary:
+    reference: >-
+      A straight grain boundary in monolayer MoS2 where two hexagonal atomic lattices meet, with their atomic rows rotated by about 22 degrees relative to each other.
+    paraphrased: >-
+      A linear interface between two grains of single-layer MoS2, whose hexagonal atomic lattices differ in orientation by roughly 22 degrees.
+    name_only: >-
+      A grain boundary in monolayer MoS2.
+    visual_only: >-
+      A straight line separating two regions of a hexagonal atomic lattice in monolayer MoS2, with atomic rows differing in direction by about 22 degrees.
+    technical_only: >-
+      A Σ7 (~21.8°) tilt grain boundary in monolayer MoS2.
+    no_description: ""
+
+# the questions: instructions and their labels (in this order)
+questions:
+  locate:
+    instructions: "Where is the target relative to the green square?"
+    criteria:
+      left: "the target lies outside the square, to its left"
+      right: "the target lies outside the square, to its right"
+      up: "the target lies outside the square, above it"
+      down: "the target lies outside the square, below it"
+      inside: "the target is inside the green square"
+      none: "the target is not visible in the image"

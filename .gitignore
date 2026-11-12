@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info
+build/
+dist/
+
+# uv environment
+.venv
+
+# viewer episode logs
+runs/
+
+# experiment logs and results
+experiments/*/run.log
+experiments/*/logs/
+experiments/*/results/
+
+# local secrets (see .env.example)
+.env
+
+# local editor and agent settings
+.vscode/
+.claude/

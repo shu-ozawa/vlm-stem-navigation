@@ -1,0 +1,272 @@
+# Every model: how it is served (serve: read by serving/models.py, which starts vLLM and the decision server) and how
+# the agent asks it (ask: read by agent/models.py, for the generated readers). The values are the ones that take
+# effect: a model's flags are added to vllm_common, and a flag may not be in both. Quote yes/no/on/off as values
+# (YAML reads them as true/false).
+#
+# A local model has two vLLM servers, one per kind of reader: typed (one token after a prefilled answer: eager, a 4k
+# context) and generated (the generated readers share it: CUDA graphs for long decodes, a 32k context, and the
+# reasoning parser, which separates the thinking so that the JSON answer is enforced after it). A hosted model (api)
+# has only the decision server.
+
+# every local model, every reader; --gpu-memory-utilization is added from STEMNAV_GPU_MEM_UTIL (default 0.9)
+vllm_common: [--max-num-seqs, "8", --limit-mm-per-prompt, '{"image":1,"video":0}', --allowed-origins, '["*"]',
+            --generation-config, vllm, --no-enable-prefix-caching]
+# --generation-config vllm: the checkpoint's generation_config.json is not read; each model's sampling is sent with
+# every request (ask: sampling)
+
+# every generated request, every model: at most this many tokens, the thinking included (an answer not written by
+# then: no answer)
+max_tokens: 8192
+
+models:
+  gemma4:
+    checkpoint: nvidia/Gemma-4-26B-A4B-NVFP4
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096", --kv-cache-dtype, bfloat16]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --kv-cache-dtype, bfloat16,
+                --reasoning-parser, gemma4]
+      typed_template_kwargs: {enable_thinking: false}   # sent by the decision server with every typed read
+    ask:
+      sampling: {temperature: 1.0, top_p: 0.95, top_k: 64}   # the checkpoint's generation_config.json
+      # what a generated request carries with thinking off and on: here the chat template's switch
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  magistral_small_2509:
+    checkpoint: mistralai/Magistral-Small-2509   # BF16, 45 GB: an RTX PRO 6000
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096", --tokenizer-mode, mistral, --config-format, mistral,
+            --load-format, mistral]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --tokenizer-mode, mistral, --config-format, mistral,
+                --load-format, mistral, --reasoning-parser, mistral]
+      typed_template_kwargs: {}   # Mistral's tokenizer takes none
+    ask:
+      sampling: {temperature: 0.7, top_p: 0.95}   # the checkpoint's generation_config.json
+      # its tokenizer (v13) has no thinking switch and takes no template kwargs: with thinking, the model card's system
+      # prompt (SYSTEM_PROMPT.txt of the repository) is added to the system turn, its [THINK] ... [/THINK] template
+      # sent as a thinking chunk (instruction_as_chunks); without, nothing
+      without_thinking: {}
+      with_thinking:
+        instruction: "# HOW YOU SHOULD THINK AND ANSWER\n\nFirst draft your thinking process (inner monologue) until \
+          you arrive at a response. Format your response using Markdown, and use LaTeX for any mathematical \
+          equations. Write both your thoughts and the response in the same language as the input.\n\nYour thinking \
+          process must follow the template below:[THINK]Your thoughts or/and draft, like working through an \
+          exercise on scratch paper. Be as casual and as long as you want until you are confident to generate the \
+          response to the user.[/THINK]Here, provide a self-contained response.\n"
+        instruction_as_chunks: true
+
+  muse_glimmer_30b:
+    checkpoint: nvidia/Muse-Glimmer-30B-NVFP4
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, muse_glimmer]
+      typed_template_kwargs: {}   # the decision server prefills the answer, so typed reads do not reason
+    ask:
+      sampling: {temperature: 0}   # the checkpoint's generation_config.json: greedy (do_sample false)
+      # thinking cannot be turned off: without is its lowest reasoning strength; with, the template's default (high)
+      without_thinking: {template_kwargs: {enable_thinking: false, reasoning_strength: low}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  qwen38_27b:
+    checkpoint: nvidia/Qwen3.8-27B-NVFP4
+    serve:
+      typed: [--enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {enable_thinking: false}   # it thinks by default
+    ask:
+      sampling: {temperature: 1.0, top_p: 0.95, top_k: 20}   # the checkpoint's generation_config.json
+      # with thinking: the template's default effort (xhigh)
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  nemotron_omni_30b:
+    checkpoint: nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
+    # its own modelling code (trust_remote_code); BF16 KV cache: with the checkpoint's FP8 one, FlashInfer's XQA decode
+    # kernel hits an illegal memory access (sm_120). Content as strings: vLLM would otherwise pass the system turn and
+    # the prefilled answer as lists of parts, which the chat template writes out as Python lists ("[{'type': ...")
+    serve:
+      typed: [--enforce-eager, --max-model-len, "32768", --trust-remote-code, --reasoning-parser, nemotron_v3,
+            --kv-cache-dtype, bfloat16, --chat-template-content-format, string]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --trust-remote-code, --reasoning-parser, nemotron_v3,
+                --kv-cache-dtype, bfloat16, --chat-template-content-format, string]
+      typed_template_kwargs: {enable_thinking: false}   # released only as a reasoning model, thinking on by default
+    ask:
+      sampling: {temperature: 0.6, top_p: 0.95}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  # Cosmos-Reason2: post-trained from Qwen3-VL-Instruct; BF16 (no official quantised release). The Qwen3-VL chat
+  # template has no thinking switch: the model card's way to make it reason is to ask for <think> ... </think>, and the
+  # qwen3 reasoning parser splits there (the template kwargs are sent as for the other models; the template ignores
+  # them). The 8B and 2B: the same recipe, template and generation_config.json (temperature 0.7, top_p 0.8, top_k 20)
+  # as the 32B, for the size comparison; their repositories are gated (accept the licence on Hugging Face).
+  cosmos_reason2_32b:
+    checkpoint: nvidia/Cosmos-Reason2-32B   # BF16, 67 GB: an RTX PRO 6000 (96 GB), not a PRO 5000 (48 GB)
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {}   # without the instruction it answers directly, so typed reads do not reason
+    ask:
+      sampling: {temperature: 0.7, top_p: 0.8, top_k: 20}
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking:
+        template_kwargs: {enable_thinking: true}
+        instruction: "Answer the question using the following format:\n\n<think>\nYour reasoning.\n</think>\n\n\
+          Write your final answer immediately after the </think> tag."
+
+  cosmos_reason2_8b:
+    checkpoint: nvidia/Cosmos-Reason2-8B
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {}
+    ask:
+      sampling: {temperature: 0.7, top_p: 0.8, top_k: 20}
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking:
+        template_kwargs: {enable_thinking: true}
+        instruction: "Answer the question using the following format:\n\n<think>\nYour reasoning.\n</think>\n\n\
+          Write your final answer immediately after the </think> tag."
+
+  cosmos_reason2_2b:
+    checkpoint: nvidia/Cosmos-Reason2-2B
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {}
+    ask:
+      sampling: {temperature: 0.7, top_p: 0.8, top_k: 20}
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking:
+        template_kwargs: {enable_thinking: true}
+        instruction: "Answer the question using the following format:\n\n<think>\nYour reasoning.\n</think>\n\n\
+          Write your final answer immediately after the </think> tag."
+
+  # Cosmos3 (Nano, Super; BF16): one checkpoint with an understanding tower (a Qwen3-VL of the 8B's size in the Nano,
+  # the 32B's in the Super) and a generation tower; vLLM (Cosmos3ForConditionalGeneration) loads the first only, but
+  # downloads both (transformer/: Nano 32 GB, Super 129 GB). Asked as Cosmos-Reason2: the same chat template without a
+  # thinking switch, the same instruction for reasoning (the Cosmos3 Reasoner prompt guide's) and the same
+  # generation_config.json (the guide's sampling for reasoning, temperature 0.6 and top_p 0.95, not used).
+  cosmos3_super:
+    checkpoint: nvidia/Cosmos3-Super   # 67 GB loaded: an RTX PRO 6000
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {}
+    ask:
+      sampling: {temperature: 0.7, top_p: 0.8, top_k: 20}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking:
+        template_kwargs: {enable_thinking: true}
+        instruction: "Answer the question using the following format:\n\n<think>\nYour reasoning.\n</think>\n\n\
+          Write your final answer immediately after the </think> tag."
+
+  cosmos3_nano:
+    checkpoint: nvidia/Cosmos3-Nano   # 18 GB loaded
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {}
+    ask:
+      sampling: {temperature: 0.7, top_p: 0.8, top_k: 20}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking:
+        template_kwargs: {enable_thinking: true}
+        instruction: "Answer the question using the following format:\n\n<think>\nYour reasoning.\n</think>\n\n\
+          Write your final answer immediately after the </think> tag."
+
+  # Gemma 4 in Google's BF16 releases, a size series of its own (E2B, E4B, 26B-A4B; the small ones have no NVFP4
+  # release, and gemma4 above is NVIDIA's NVFP4 of the 26B-A4B): one architecture, chat template, thinking switch and
+  # generation_config.json.
+  gemma4_26b_bf16:
+    checkpoint: google/gemma-4-26B-A4B-it   # BF16, 52 GB: an RTX PRO 6000
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, gemma4]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 1.0, top_p: 0.95, top_k: 64}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  gemma4_e2b:
+    checkpoint: google/gemma-4-E2B-it
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, gemma4]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 1.0, top_p: 0.95, top_k: 64}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  gemma4_e4b:
+    checkpoint: google/gemma-4-E4B-it
+    serve:
+      typed: [--enforce-eager, --max-model-len, "4096"]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, gemma4]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 1.0, top_p: 0.95, top_k: 64}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  # Qwen3.5, a size series of its own (2B, 4B, 9B, 27B; BF16): one chat template with a thinking switch (the 2B
+  # answers directly by default, the larger ones think: the switch is sent either way). Only the 27B has a
+  # generation_config.json; its sampling (the model cards' setting for images with thinking) is used for all four.
+  qwen35_2b:
+    checkpoint: Qwen/Qwen3.5-2B
+    serve:
+      typed: [--enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 0.6, top_p: 0.95, top_k: 20}
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  qwen35_4b:
+    checkpoint: Qwen/Qwen3.5-4B
+    serve:
+      typed: [--enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 0.6, top_p: 0.95, top_k: 20}
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  qwen35_9b:
+    checkpoint: Qwen/Qwen3.5-9B
+    serve:
+      typed: [--enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 0.6, top_p: 0.95, top_k: 20}
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  qwen35_27b:
+    checkpoint: Qwen/Qwen3.5-27B   # BF16, 54 GB: an RTX PRO 6000
+    serve:
+      typed: [--enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      generated: [--no-enforce-eager, --max-model-len, "32768", --reasoning-parser, qwen3]
+      typed_template_kwargs: {enable_thinking: false}
+    ask:
+      sampling: {temperature: 0.6, top_p: 0.95, top_k: 20}   # the checkpoint's generation_config.json
+      without_thinking: {template_kwargs: {enable_thinking: false}}
+      with_thinking: {template_kwargs: {enable_thinking: true}}
+
+  # Hosted, typed reads only (no ask: no generated readers). The decision server passes the request on (engine
+  # typesafe: serving/decision_server/typesafe_engine.py) or translates it (decisions: decisions_engine.py); the key
+  # is read from .env. Jev: a pinned release (the alias jev-latest moves with each release).
+  jev:
+    checkpoint: jev-1.13.0   # the API's model name
+    api: {base: "https://api.typesafe.ai", key_env: TYPESAFE_API_KEY}
+    serve: {engine: typesafe}
+
+  openai_decisions:
+    checkpoint: gpt-6-luna   # the API's model name
+    api: {base: "https://api.openai.com", key_env: OPENAI_API_KEY}
+    serve: {engine: decisions}

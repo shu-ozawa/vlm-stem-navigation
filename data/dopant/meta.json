@@ -1,0 +1,70 @@
+{
+  "description": "HAADF-STEM image of monolayer 2H-MoS2 with one W substituting Mo; periodic",
+  "image_file": "haadf.npy",
+  "shape_rows_cols": [
+    2102,
+    2022
+  ],
+  "pixel_size_A": {
+    "x": 0.12502472799208705,
+    "y": 0.12498452259374275
+  },
+  "dopant": {
+    "element": "W",
+    "replaces": "Mo",
+    "x_A": 104.28,
+    "y_A": 109.46561103835305,
+    "pixel_row": 875.8333333333335,
+    "pixel_col": 834.0749999999999
+  },
+  "specimen": {
+    "material": "2H-MoS2 monolayer",
+    "a_A": 3.16,
+    "S_S_thickness_A": 3.17,
+    "rectangular_cells": [
+      80,
+      48
+    ],
+    "size_A": [
+      252.8,
+      262.71746649204727
+    ],
+    "atoms": 23040
+  },
+  "microscope": {
+    "energy_keV": 80.0,
+    "convergence_semiangle_mrad": 25.0,
+    "haadf_mrad": [
+      70.0,
+      200.0
+    ],
+    "aberrations": "none",
+    "source_size_sigma_A": 0.3
+  },
+  "simulation": {
+    "method": "abTEM multislice (GPU) of the whole periodic specimen, in scan windows",
+    "potential_sampling_A": 0.06,
+    "slice_thickness_A": 1.0,
+    "projection": "infinite",
+    "parametrization": "lobato",
+    "scan_step_A": {
+      "x": 0.3496542185338866,
+      "y": 0.3498235239574531
+    },
+    "window_points": 144,
+    "pad_A": 8.0,
+    "frozen_phonons": 4,
+    "fp_sigma_A": {
+      "Mo": 0.06,
+      "W": 0.06,
+      "S": 0.08
+    },
+    "seed": 0,
+    "intensity_unit": "fraction of the incident probe on the HAADF detector"
+  },
+  "versions": {
+    "abtem": "1.0.10",
+    "numpy": "2.3.5"
+  },
+  "wall_time_s": 3536.5
+}

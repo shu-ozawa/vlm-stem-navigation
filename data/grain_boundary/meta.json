@@ -1,0 +1,77 @@
+{
+  "description": "HAADF-STEM image of a Sigma7 symmetric tilt grain boundary in monolayer MoS2 (unrelaxed cut-and-mirror model); periodic, boundaries along the rows",
+  "image_file": "haadf.npy",
+  "model_file": "bicrystal.xyz",
+  "shape_rows_cols": [
+    1070,
+    5097
+  ],
+  "pixel_size_A": {
+    "x": 0.1250071266679733,
+    "y": 0.12501793110974363
+  },
+  "boundary_cols": {
+    "main": 2548.5,
+    "wrap": 0.0
+  },
+  "model": {
+    "boundary_vector_mn": [
+      2,
+      1
+    ],
+    "period_along_boundary_A": 8.360574142964106,
+    "grain_period_A": 14.480939196060453,
+    "misorientation_deg": 21.78678929826181,
+    "shift_x_A": 0.5,
+    "size_A": [
+      637.16132462666,
+      133.7691862874257
+    ],
+    "boundaries_x_A": {
+      "main": 318.58066231333,
+      "wrap": 0.0
+    },
+    "overlaps": {
+      "merged_Mo": 32,
+      "merged_S": 32,
+      "removed_Mo": 0,
+      "removed_S": 64
+    },
+    "atoms": 29440
+  },
+  "microscope": {
+    "energy_keV": 80.0,
+    "convergence_semiangle_mrad": 25.0,
+    "haadf_mrad": [
+      70.0,
+      200.0
+    ],
+    "aberrations": "none",
+    "source_size_sigma_A": 0.3
+  },
+  "simulation": {
+    "method": "abTEM multislice (GPU) of the whole periodic bicrystal, in scan windows",
+    "potential_sampling_A": 0.06,
+    "slice_thickness_A": 1.0,
+    "projection": "infinite",
+    "parametrization": "lobato",
+    "scan_step_A": {
+      "x": 0.3498963891414937,
+      "y": 0.34926680492800444
+    },
+    "window_points": 144,
+    "pad_A": 8.0,
+    "frozen_phonons": 4,
+    "fp_sigma_A": {
+      "Mo": 0.06,
+      "S": 0.08
+    },
+    "seed": 0,
+    "intensity_unit": "fraction of the incident probe on the HAADF detector"
+  },
+  "versions": {
+    "abtem": "1.0.10",
+    "numpy": "2.3.5"
+  },
+  "wall_time_s": 3948.3
+}

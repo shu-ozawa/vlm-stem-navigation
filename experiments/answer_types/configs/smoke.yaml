@@ -1,0 +1,23 @@
+# A short run to try the benchmark, with every reader: 2 episodes per task and start mode, and the probe views of one
+# seed (7 offsets x 3 zooms = 21 per task), with gemma4 (NVFP4: a Blackwell GPU with 48 GB or more):
+#   uv run python experiments/answer_types/run.py --config experiments/answer_types/configs/smoke.yaml
+run: smoke
+
+readers: [typed, generated, generated_thinking]
+description: reference   # the target descriptions' name (src/agent/prompts/texts.yaml targets)
+models: [gemma4]
+
+episodes:
+  tasks: [dopant_zoom, grain_boundary]
+  start_modes: [visible, hidden]
+  seeds: {start: 2000, count: 2}
+  max_steps: 60
+  dose: null
+
+probes:
+  tasks: [grain_boundary, dopant_zoom]
+  seeds: {start: 2000, count: 1}
+  offsets_A: [0, 4, 8, 12, 16, 24, 32]
+  zoom_indices: [0, 1, 2]
+
+server: {require_idle_gpu: true, startup_timeout_s: 1500, shutdown_timeout_s: 180}
